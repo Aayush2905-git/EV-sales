@@ -1,0 +1,166 @@
+# ------------------ IMPORTING LIBRARIES ------------------
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# ------------------ DATASET LOADING ------------------
+
+# Load the Dataset
+file_path = '/Users/anshukavashishtha/Downloads/Ev Sales.xlsx'  # Update with the actual path
+df = pd.read_excel(file_path)
+
+# Display the first few rows of the dataset
+df.head()
+
+
+# ------------------ DATA CLEANING ------------------
+
+# Check for duplicate rows
+duplicates = df.duplicated().sum()
+print(f"Number of duplicate rows: {duplicates}")
+
+# Remove duplicate rows if any
+df = df.drop_duplicates()
+
+# Fill missing values in numeric columns with 0
+df.fillna(0, inplace=True)
+
+# Alternatively, if you prefer to drop rows with missing values:
+# df = df.dropna()
+
+
+# ------------------ DATA FILTERING ------------------
+
+# Convert the 'YEAR' column to datetime format
+df['YEAR'] = pd.to_datetime(df['YEAR'])
+
+# Extract only the year from 'YEAR' column for easier grouping later
+df['Year_Only'] = df['YEAR'].dt.year
+
+# Check for any remaining missing values in the dataset
+df.isnull().sum()
+
+
+# ------------------ DATA ANALYSIS ------------------
+
+# 1. Yearly Sales Aggregation
+yearly_sales = df.groupby('Year_Only').sum(numeric_only=True)
+
+# 2. Monthly Growth Analysis (calculate month-over-month growth in sales)
+df['Monthly_Growth'] = df['TOTAL'].pct_change() * 100
+
+# 3. Correlation Calculation (between various vehicle categories)
+correlation = df[['2 W', '3 W', '4 W', 'BUS', 'TOTAL']].corr()
+
+
+# ------------------ DATA VISUALIZATION ------------------
+
+# 1. Plot Overall EV Sales Trend
+plt.figure(figsize=(10, 6))
+plt.plot(df['YEAR'], df['TOTAL'], marker='o', linestyle='-', color='b')
+plt.title('Total EV Sales Over Time')
+plt.xlabel('Year')
+plt.ylabel('Total Sales')
+plt.grid(True)
+plt.show()
+
+# 2. Plot Category-Wise EV Sales Trends
+plt.figure(figsize=(10, 6))
+plt.plot(df['YEAR'], df['2 W'], marker='o', label='2W', linestyle='-', color='g')
+plt.plot(df['YEAR'], df['3 W'], marker='o', label='3W', linestyle='-', color='orange')
+plt.plot(df['YEAR'], df['4 W'], marker='o', label='4W', linestyle='-', color='r')
+plt.plot(df['YEAR'], df['BUS'], marker='o', label='Bus', linestyle='-', color='purple')
+plt.title('Category-Wise EV Sales Trends')
+plt.xlabel('Year')
+plt.ylabel('Sales')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# 3. Plot Yearly Total EV Sales (Bar Chart)
+plt.figure(figsize=(10, 6))
+plt.bar(yearly_sales.index, yearly_sales['TOTAL'], color='skyblue')
+plt.title('Yearly Total EV Sales')
+plt.xlabel('Year')
+plt.ylabel('Total Sales')
+plt.show()
+
+# 4. Plot Month-over-Month Growth in EV Sales
+plt.figure(figsize=(10, 6))
+plt.plot(df['YEAR'], df['Monthly_Growth'], marker='o', linestyle='-', color='magenta')
+plt.title('Month-over-Month Growth in EV Sales')
+plt.xlabel('Year')
+plt.ylabel('Percentage Growth (%)')
+plt.grid(True)
+plt.show()
+
+# 5. Plot Correlation Heatmap for EV Sales Categories
+plt.figure(figsize=(8, 6))
+sns.heatmap(correlation, annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title('Correlation Between EV Sales Categories')
+plt.show()
+BASE_PRICE_PER_KWH = 11.5
+
+def main():
+
+    df = pd.read_csv('Ev Sales.csv')
+
+
+    index_value = int(input("Enter the index value: "))
+
+
+    if index_value < 0 or index_value >= len(df):
+        print("Invalid index value. Please enter a value between 0 and", len(df) - 1)
+        return
+
+
+    charging_time = df.loc[index_value, 'CHARGING POWER']
+    charging_capacity = df.loc[index_value, 'CHARGING CAPACITY']
+
+
+    charging_time_seconds = charging_time * 0.25
+
+    initial_percentage = random.randint(5, 40)
+    
+    final_percentage = 100
+    total_price = (final_percentage-initial_percentage) * BASE_PRICE_PER_KWH
+
+    print(initial_percentage, charging_time_seconds * charging_capacity)
+
+    print(f"Total price for {final_percentage-initial_percentage:.2f}% : ₹{total_price:.2f}")
+    payment_received = input("Enter 'yes' if payment is received: ")
+    if payment_received.lower() != 'yes':
+        print("Payment not received. Charging canceled.")
+        return
+    
+    print(f"Charging started. Initial percentage: {initial_percentage}%")
+    
+ 
+    current_percentage = initial_percentage
+ 
+    i = charging_time * 10
+    initial = initial_percentage
+    while (current_percentage < final_percentage):
+        # Calculate the current percentage based on the charging capacity
+        current_percentage = initial_percentage +  (i*charging_capacity / 10)
+        
+        # Ensure we do not exceed 100%
+        if current_percentage > 100:
+            current_percentage = 100
+        
+        print(f"Charging progress: {current_percentage:.2f}%")
+        
+        # Check if charging is completed
+        if current_percentage >= final_percentage:
+            print("Charging completed!")
+            print(f"Charging complete! Battery charged from {initial:.2f}% to {current_percentage:.2f}%.")
+            break
+        initial_percentage = current_percentage
+        time.sleep(charging_time_seconds) 
+
+    # If the loop completes without reaching final percentage
+    if current_percentage < final_percentage:
+        print("Charging stopped. Final percentage:", current_percentage)
+
+main()
